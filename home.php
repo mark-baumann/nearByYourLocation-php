@@ -14,7 +14,7 @@ $username = $_SESSION['username'];
     if (isset($_GET["lat"])) {
         $lat = $_GET["lat"];
         $long = $_GET["long"];
- 
+        
        
         $sql = "UPDATE users SET longtitude = '$long', latitude = '$lat' WHERE username = '$username';";
        
@@ -61,3 +61,57 @@ async function sendData(lat, long) {
 </body>
  
 <html>
+
+
+<?php
+$username = $_SESSION['username'];
+
+$dist = 15;
+
+$sql = "SELECT latitude FROM users WHERE username = '$username'";
+$result =  mysqli_query($db, $sql);
+
+while ($row = $result->fetch_assoc()) {
+    $lat =  $row['latitude'];
+}
+
+
+$sql = "SELECT longtitude FROM users WHERE username = '$username'";
+$result =  mysqli_query($db, $sql);
+
+while ($row = $result->fetch_assoc()) {
+    $long =  $row['longtitude'];
+}
+#echo $long;
+#echo $lat;
+
+#This is if you want to fetch the nearest person first, and then the others...There is no limit for fetching
+#$sql = "SELECT * FROM users ORDER BY ((latitude-$lat)*(latitude-$lat)) + ((longtitude - $long)*(longtitude - $long)) ASC;";
+
+
+$sql = "SELECT *, (6371 * acos(
+      cos ( radians($lat) )
+      * cos( radians( latitude ) )
+      * cos( radians( longtitude ) - radians($long) )
+      + sin ( radians($lat) )
+      * sin( radians( latitude ) )
+    )
+) AS distance
+FROM users
+HAVING distance < 30
+ORDER BY distance
+LIMIT 0 , 20;";
+
+
+
+$result = mysqli_query($db, $sql);
+
+
+while ($row = $result->fetch_assoc()) {
+    #echo $row['id'];
+    echo $row['username']."<br>";
+}
+
+
+
+?>
